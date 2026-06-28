@@ -1,0 +1,2 @@
+Reaction number,Reaction ID,Original equation,Compartment,"dGr_prime (kJ/mol), dGbyG","SD of dGr_prime (kJ/mol), dGbyG",Annotation
+723,r_0953,ammonium + 2.0 H2O + 0.5 oxygen + pyridoxal => 2.0 hydrogen peroxide + pyridoxamine,c,406.9719543457031,70.78759765625,sbo: SBO:0000176; ec-code: 1.4.3.5; bigg.reaction: PYDXO; kegg.pathway: sce00750; metanetx.reaction: MNXR103365
