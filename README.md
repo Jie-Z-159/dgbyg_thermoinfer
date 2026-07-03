@@ -1,9 +1,4 @@
 # Protocol for Predicting Gibbs Energies and Inferring Thermodynamic Directions in Genome-Scale Metabolic Models Using dGbyG and ThermoInfer
-
-**Authors:** Jie Zhong, Wenchao Fan, and Ziwei Dai
-
-**Correspondence:** zhongj1304232@outlook.com (J.Z.); daizw@sustech.edu.cn (Z.D.)
-
 ---
 
 ## Summary
@@ -29,16 +24,12 @@ Integrating reaction thermodynamics is essential for refining constraint-based m
 
 ## Before You Begin
 
-Reaction thermodynamics provides a physical basis for determining biochemical directionality. For a given metabolic reaction, its feasible direction is governed by the actual Gibbs free energy change (ΔrG'), which depends on both standard thermodynamic properties (ΔrG'°) and metabolite concentrations.
+Reaction thermodynamics provides a physical basis for determining biochemical directionality. For a given metabolic reaction, its feasible direction is governed by the actual Gibbs free energy change (ΔrG), which depends on both standard thermodynamic properties (ΔrG°) and metabolite concentrations.
 
-**dGbyG** uses graph neural networks (GNNs) to predict standard Gibbs free energies, expanding both the coverage and accuracy of reaction thermodynamic estimates. **ThermoInfer** then uses these estimates within a GEM to evaluate reaction directionality via thermodynamic flux balance analysis (TFBA).
+**dGbyG** uses graph neural networks (GNNs) to predict ΔrG°. 
+**ThermoInfer**  uses ΔrG° estimates within a GEM to evaluate reaction directionality via thermodynamic flux balance analysis (TFBA).
 
 ### System Requirements
-
-This protocol was tested on:
-- Linux server with 2 × AMD EPYC 7763 64-core CPUs
-- 1.0 TiB RAM
-- NVIDIA GeForce RTX 4090 GPU with CUDA 12.2
 
 Users should run this protocol on a **Linux system** with **Conda** installed, ensuring sufficient CPU cores, memory, and a valid **Gurobi license** are available.
 
@@ -111,13 +102,6 @@ Follow the step-by-step workflow in `workflow_yeast.ipynb`, which demonstrates:
 ## Citation
 
 If you use this protocol, please cite the associated study.
-
+Wenchao Fan, Yonghong Hao, Xiangyu Hou, Chuyun Ding, Dan Huang, Weiyan Zheng, Ziwei Dai. Unraveling principles of thermodynamics for genome-scale metabolic networks using graph neural networks. Cell systems, 16(10), 101393.
 ---
 
-## Contact
-
-- **Jie Zhong** (Technical contact): zhongj1304232@outlook.com
-  Department of Systems Biology, School of Life Sciences, Southern University of Science and Technology, Shenzhen 518055, China
-
-- **Ziwei Dai** (Lead contact): daizw@sustech.edu.cn
-  Department of Systems Biology, School of Life Sciences, Southern University of Science and Technology, Shenzhen 518055, China
