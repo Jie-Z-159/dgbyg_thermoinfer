@@ -5,7 +5,7 @@
 
 Integrating reaction thermodynamics is essential for refining constraint-based metabolic models. This repository provides the computational protocol coupling the **dGbyG** package with **ThermoInfer** for thermodynamic feasibility inference. The protocol describes the initial steps for setting up the computational environment and includes a worked example using the Yeast genome-scale metabolic model (GEM) to demonstrate how thermodynamic estimates can be used to evaluate reaction directionality.
 
-![Graphical Abstract](GA.tif)
+[GA.tif](https://github.com/user-attachments/files/29628338/GA.tif)
 
 ---
 
@@ -101,7 +101,9 @@ Follow the step-by-step workflow in `workflow_yeast.ipynb`, which demonstrates:
 
 ## Citation
 
-If you use this protocol, please cite the associated study.
-Wenchao Fan, Yonghong Hao, Xiangyu Hou, Chuyun Ding, Dan Huang, Weiyan Zheng, Ziwei Dai. Unraveling principles of thermodynamics for genome-scale metabolic networks using graph neural networks. Cell systems, 16(10), 101393.
+If you use this protocol or code in your research, please cite the associated study:
+
+**Fan, W., Hao, Y., Hou, X., Ding, C., Huang, D., Zheng, W., & Dai, Z. (2025). Unraveling principles of thermodynamics for genome-scale metabolic networks using graph neural networks. *Cell Systems*, 16(10), 101393.**
+
 ---
 
