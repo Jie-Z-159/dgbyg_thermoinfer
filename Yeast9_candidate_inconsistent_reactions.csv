@@ -6,4 +6,4 @@ Reaction number,Reaction ID,Original equation,,Compartment,"dGr_prime (kJ/mol), 
 1632,r_2256,4.0 H+ + H2O + trans-oct-2-enoyl-CoA => (R)-3-hydroxyoctanoyl-CoA,整体没问题，paper and database do not support 4 H+ as substrates,p,-9.781252664,1.810396005,"sbo: SBO:0000176; ec-code: ['1.1.1.n12', '4.2.1.119']; metanetx.reaction: MNXR118594; pubmed: 12697341"
 1639,r_2263,"4.0 H+ + H2O + trans-2,cis-9-octadecadienoyl-CoA => (R)-3-hydroxy-cis-octadec-9-enoyl-CoA",同上,p,-22.07616325,3.496447253,"sbo: SBO:0000176; ec-code: ['1.1.1.n12', '4.2.1.119']; pubmed: 12697341"
 4031,r_4713,2.0 ethanol + 2.0 H+ + succinate => 2.0 H2O + diethyl succinate,,c,37.43824485,3.960187239,sbo: SBO:0000176; ec-code: 3.1.-.-
-4032,r_4714,ethanol + H+ + succinate => H2O + monoethyl succinate,非常可疑，这二个反应都是酯化反应（Esterification，在生理条件下很难发生。一般需要通过酰基辅酶A等高能中间体激活。而注释里面的EC 3.1.-.- 一般指代作用于酯键的水解酶，而非此类反应,c,18.69908843,1.980095892,sbo: SBO:0000176; ec-code: 3.1.-.-
+4032,r_4714,ethanol + H+ + succinate => H2O + monoethyl succinate,非常可疑，这二个反应都是酯化反应（Esterification，在生理条件下很难发生。一般需要通过酰基辅酶A等高能中间体激活。并且注释里面的EC 3.1.-.- 一般指代作用于酯键的水解酶，而非此类反应,c,18.69908843,1.980095892,sbo: SBO:0000176; ec-code: 3.1.-.-
