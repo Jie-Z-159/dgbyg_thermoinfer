@@ -75,6 +75,9 @@ Example usage:
     parser.add_argument('--v-ei', type=int, default=None,
                         help='End reaction index (0-based, inclusive) for TFBA inference. Use to process a subset of reactions. If not provided, runs to the last reaction (default: None)')
 
+    parser.add_argument('--run-fba', action='store_true', default=False,
+                        help='Also run FBA directionality inference and save to <gem_basename>_Directionality_FBA.csv')
+
     return parser.parse_args()
 
 
@@ -86,8 +89,10 @@ dgr_path = args.dgr_path
 if args.output is None:
     gem_basename = os.path.splitext(os.path.basename(gem_path))[0]
     tfba_output_path = f"./{gem_basename}_Directionality_TFBA.csv"
+    fba_output_path = f"./{gem_basename}_Directionality_FBA.csv"
 else:
     tfba_output_path = args.output
+    fba_output_path = os.path.splitext(args.output)[0].replace('_TFBA', '') + '_FBA.csv'
 
 batch_size = args.batch_size
 thread = args.threads
@@ -210,4 +215,23 @@ tgem.concurrent_infer_v_and_dGr(
 )
 
 print(f"TFBA finished in {(time.time() - t0) / 60:.2f} min")
+
+
+# -----------------------------
+# Run FBA directionality inference (optional)
+# -----------------------------
+
+if args.run_fba:
+    print("Running FBA directionality inference...")
+    t0 = time.time()
+
+    tgem.FBA_res_file_path = fba_output_path
+    tgem.concurrent_infer_v(
+        v_si=v_si,
+        v_ei=v_ei,
+        batch_size=batch_size,
+        thread=thread
+    )
+
+    print(f"FBA finished in {(time.time() - t0) / 60:.2f} min")
 
