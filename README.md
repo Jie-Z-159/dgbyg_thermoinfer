@@ -3,9 +3,9 @@
 
 ## Summary
 
-Integrating reaction thermodynamics is essential for refining constraint-based metabolic models. This repository provides the computational protocol coupling the **dGbyG** package with **ThermoInfer** for thermodynamic feasibility inference. The protocol describes the initial steps for setting up the computational environment and includes a worked example using the Yeast genome-scale metabolic model (GEM) to demonstrate how thermodynamic estimates can be used to evaluate reaction directionality.
+Integrating reaction thermodynamics is essential for refining constraint-based metabolic models. This repository provides a computational protocol coupling the **dGbyG** package with **ThermoInfer** for thermodynamic feasibility inference. The protocol describes the setup of the computational environment and a worked Yeast-GEM example showing how dGbyG-predicted reaction standerd Gibbs energy values (ΔrG°) can be used in ThermoInfer to evaluate reaction directionality.
 
-[GA.tif](https://github.com/user-attachments/files/29628338/GA.tif)
+![Graphical Abstract](GA.png)
 
 ---
 
@@ -14,24 +14,24 @@ Integrating reaction thermodynamics is essential for refining constraint-based m
 | File | Description |
 |------|-------------|
 | `workflow_yeast.ipynb` | Main Jupyter notebook demonstrating the full workflow |
-| `run_tfba_yeast.py` | Python script for running thermodynamic flux balance analysis (TFBA) |
-| `yeast-GEM.xml` | Yeast genome-scale metabolic model (GEM) in SBML format |
-| `Yeast9_standard_dGr_dGbyG.csv` | Standard Gibbs free energy predictions from dGbyG for yeast reactions |
-| `Yeast9_Directionality_TFBA.csv` | Inferred thermodynamic directionality results from ThermoInfer |
-| `Yeast9_candidate_inconsistent_reactions.csv` | Candidate reactions with thermodynamically inconsistent directionality |
+| `run_tfba.py` |  Command-line Python script for running ThermoInfer-based TFBA using a GEM file and a dGbyG reaction-level prediction table as input |
+| `yeast-GEM.xml` | Yeast genome-scale metabolic model (GEM) in XML format |
+| `Yeast9_compartment_conditions.json` | Compartment-specific physicochemical conditions (pH, ionic strength, temperature, electrical potential, pMg) |
+| `Yeast9_standard_dGr_dGbyG.csv` | dGbyG prediction table containing predicted ΔrG° values and their standard deviations |
+| `yeast-GEM_Directionality_TFBA.csv` | ThermoInfer TFBA output containing feasible flux ranges and reaction Gibbs energy ranges |
+| `Yeast9_candidate_inconsistent_reactions.csv` | Candidate reactions with thermodynamically inconsistent directionality for manual review |
 
 ---
 
 ## Before You Begin
 
-Reaction thermodynamics provides a physical basis for determining biochemical directionality. For a given metabolic reaction, its feasible direction is governed by the actual Gibbs free energy change (ΔrG), which depends on both standard thermodynamic properties (ΔrG°) and metabolite concentrations.
 
-**dGbyG** uses graph neural networks (GNNs) to predict ΔrG°. 
-**ThermoInfer**  uses ΔrG° estimates within a GEM to evaluate reaction directionality via thermodynamic flux balance analysis (TFBA).
+ **dGbyG** uses graph neural networks (GNNs) to predict standard Gibbs free energies of formation for metabolites (ΔfG°), which are then used to calculate ΔrG° for reactions.
+ **ThermoInfer** uses the ΔrG° prediction table within a GEM to evaluate feasible flux ranges and reaction Gibbs energy ranges via thermodynamic flux balance analysis (TFBA).
 
 ### System Requirements
 
-Users should run this protocol on a **Linux system** with **Conda** installed, ensuring sufficient CPU cores, memory, and a valid **Gurobi license** are available.
+Users should run this protocol in a Linux or WSL2/Ubuntu environment with **Conda** installed. A valid **Gurobi license** are required. GPU acceleration is optional.
 
 ---
 
@@ -75,9 +75,13 @@ git clone https://gitee.com/f-wc/ThermoInfer.git
 cd ~/dgbyg_thermoinfer_protocol/dGbyG
 conda env create -f environment.yml -n dgbyg-thermoinfer
 conda activate dgbyg-thermoinfer
+```
 
-# Install additional packages
-pip install libChEBIpy numpyarray-to-latex
+Install JupyterLab and install dGbyG in editable mode:
+
+```bash
+conda install -c conda-forge jupyterlab -y
+python -m pip install -e .
 ```
 
 ### 4. Install Gurobi
@@ -92,10 +96,49 @@ conda install -c gurobi gurobi -y
 
 ## Usage
 
-Follow the step-by-step workflow in `workflow_yeast.ipynb`, which demonstrates:
-1. Predicting standard Gibbs free energies using dGbyG
-2. Running thermodynamic flux balance analysis (TFBA) with ThermoInfer
-3. Identifying reactions with inconsistent thermodynamic directionality in the Yeast GEM
+The complete workflow consists of four main stages:
+
+### Stage 1: Load GEM and Define Compartment Conditions (JupyterLab)
+
+Open and run `workflow_yeast.ipynb` to:
+- Load the Yeast-GEM SBML model (`yeast-GEM.xml`)
+- Define compartment-specific physicochemical conditions (pH, temperature, ionic strength, electrical potential, pMg)
+- Save conditions to `Yeast9_compartment_conditions.json`
+
+### Stage 2: Run dGbyG Predictions (JupyterLab)
+
+Continue in the notebook to:
+- Run dGbyG to predicted `dGr_prime` values and standard deviations for eligible reactions in the GEM
+- Generate `Yeast9_standard_dGr_dGbyG.csv`.
+
+### Stage 3: Run ThermoInfer TFBA (Terminal)
+
+**Pause the notebook** and run the standalone TFBA script from the terminal:
+
+```bash
+python run_tfba.py yeast-GEM.xml Yeast9_standard_dGr_dGbyG.csv --compartments Yeast9_compartment_conditions.json
+```
+
+ `run_tfba.py` takes two required positional arguments: `gem_path`, the path to the GEM file, and `dgr_path`, the path to the dGbyG reaction-level prediction table. Optional arguments include `--compartments`, `--output`, `--batch-size`, `--threads`, `--biomass-fraction`, `--v-si`, `--v-ei`, and `--run-fba`.
+
+ To view all available command-line arguments and their default values, run:
+
+```bash
+python run_tfba.py --help
+```
+
+ This command generates `yeast-GEM_Directionality_TFBA.csv`, which contains feasible flux ranges and reaction Gibbs energy ranges inferred by ThermoInfer-based TFBA.
+
+> ** CRITICAL:** For routine execution, start with the default conservative settings, `--batch-size 20` and `--threads 5`. Increase these values only after confirming that CPU cores, memory, and Gurobi license capacity are sufficient.
+
+> ** Note:** If TFBA is interrupted after partial results have been written, do not delete the partially generated output file. Rerun the same command using the same `--output` path. The script automatically detects the existing output file and continues from the next unfinished reaction index.
+
+### Stage 4: Identify Candidate Reactions (JupyterLab)
+
+Return to the notebook to:
+- Load the TFBA output file
+- Compare directionality labels inferred from the original GEM reaction flux bounds with TFBA-derived direction classifications based on feasible flux ranges and reaction Gibbs energy ranges
+- Generate `Yeast9_candidate_inconsistent_reactions.csv` for manual review
 
 ---
 
