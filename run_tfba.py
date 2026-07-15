@@ -1,7 +1,12 @@
+import os
+
+# Create gurobi.env to suppress Gurobi output BEFORE importing any Gurobi-related modules
+with open(os.path.join(os.getcwd(), "gurobi.env"), "w", encoding="utf-8") as f:
+    f.write("OutputFlag 0\n")
+
 import time
 import json
 import argparse
-import os
 import contextlib
 import cobra
 import numpy as np
