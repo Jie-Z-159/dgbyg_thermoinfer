@@ -4,6 +4,7 @@ import os
 with open(os.path.join(os.getcwd(), "gurobi.env"), "w", encoding="utf-8") as f:
     f.write("OutputFlag 0\n")
 
+import sys
 import time
 import json
 import argparse
@@ -45,6 +46,25 @@ def load_compartment_conditions(json_path):
         return json.load(f)
 
 
+def is_gurobi_license_error(error):
+    error_msg = str(error).lower()
+
+    license_keywords = [
+        "license",
+        "size-limited",
+        "hostid mismatch",
+        "no valid license",
+        "no gurobi license",
+        "unable to open gurobi license",
+        "license expired",
+        "grb_license_file",
+        "gurobi error 10009",
+        "gurobi error 10010",
+    ]
+
+    return any(keyword in error_msg for keyword in license_keywords)
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser(
         description='Run TFBA directionality inference on a genome-scale metabolic model.',
@@ -57,7 +77,7 @@ Supported GEM file formats:
 Example usage:
   python run_tfba.py model.xml dGr_predictions.csv
   python run_tfba.py model.mat dGr_predictions.csv --compartments compartments.json
-  python run_tfba.py model.xml dGr_predictions.csv --output results.csv --threads 16
+  python run_tfba.py model.xml dGr_predictions.csv --output results.csv --threads 10
         '''
     )
 
@@ -90,6 +110,15 @@ args = parse_arguments()
 
 gem_path = args.gem_path
 dgr_path = args.dgr_path
+
+# Check file existence
+if not os.path.exists(gem_path):
+    print(f"Error: GEM file not found: {gem_path}")
+    sys.exit(1)
+
+if not os.path.exists(dgr_path):
+    print(f"Error: dGr file not found: {dgr_path}")
+    sys.exit(1)
 
 if args.output is None:
     gem_basename = os.path.splitext(os.path.basename(gem_path))[0]
@@ -164,22 +193,44 @@ for met in tqdm(gem.metabolites):
 
 
 # -----------------------------
-# Load dGbyG reaction-level predictions
+# Load the dGbyG output table for predicted dGr values and SDs
 # -----------------------------
 
-print("Loading dGbyG reaction-level predictions...")
+print("Loading the dGbyG output table ...")
 
 Rxn_df = pd.read_csv(dgr_path, index_col=0)
-dGr = Rxn_df[["dGr_prime", "SD of dGr_prime"]].to_numpy()
+
+# Match dGr data to GEM reactions by reaction ID (not by position)
+print("Matching dGr data to GEM reactions by ID...")
+dGr = np.array([
+    Rxn_df.loc[rxn.id, ["dGr_prime", "SD of dGr_prime"]].to_list()
+    if rxn.id in Rxn_df.index
+    else [np.nan, np.nan]
+    for rxn in gem.reactions
+])
+
+# Validate matching rate
+total_reactions = len(gem.reactions)
+matched_reactions = sum(1 for rxn in gem.reactions if rxn.id in Rxn_df.index)
+match_rate = matched_reactions / total_reactions * 100
+
+print(f"dGr data matching: {matched_reactions}/{total_reactions} reactions ({match_rate:.1f}%)")
+
+# Warn if matching rate is low
+if match_rate < 95:
+    print(f"\n⚠️  WARNING: Only {match_rate:.1f}% of reaction ids matched between GEM and dGr file.")
+    response = input("    Do you want to continue? (y/n): ")
+    if response.lower() != 'y':
+        print("Aborted by user.")
+        sys.exit(1)
 
 single_compartment_rxn = np.array([
     len(rxn.compartments) == 1
     for rxn in gem.reactions
 ])
 
+# Set multi-compartment reactions to NaN (they cannot have well-defined thermodynamics)
 dGr[~single_compartment_rxn, :] = np.nan
-
-print(f"Reactions with usable dGr_prime values: {np.sum(~np.isnan(dGr[:, 0]))}")
 
 
 # -----------------------------
@@ -188,8 +239,17 @@ print(f"Reactions with usable dGr_prime values: {np.sum(~np.isnan(dGr[:, 0]))}")
 
 print("Building ThermoInfer model...")
 
-with suppress_stdout_stderr():
-    max_biomass = gem.slim_optimize()
+try:
+    with suppress_stdout_stderr():
+        max_biomass = gem.slim_optimize()
+except Exception as e:
+    if is_gurobi_license_error(e):
+        print(f"\n❌ Error: No valid Gurobi license available")
+        print(f"   Details: {e}")
+    else:
+        print(f"\n❌ Error during optimization: {e}")
+    sys.exit(1)
+
 biomass_synthesis = biomass_fraction * max_biomass
 
 print(f"Maximum biomass flux: {max_biomass}")
