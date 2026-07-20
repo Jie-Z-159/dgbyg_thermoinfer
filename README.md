@@ -77,10 +77,15 @@ conda env create -f environment.yml -n dgbyg-thermoinfer
 conda activate dgbyg-thermoinfer
 ```
 
-Install JupyterLab and install dGbyG in editable mode:
+Install JupyterLab, dGbyG, and ThermoInfer:
 
 ```bash
 conda install -c conda-forge jupyterlab -y
+
+cd ~/dgbyg_thermoinfer_protocol/dGbyG
+python -m pip install -e .
+
+cd ~/dgbyg_thermoinfer_protocol/ThermoInfer
 python -m pip install -e .
 ```
 
